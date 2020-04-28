@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Image, ImageBackground, Platform, StyleSheet, TouchableOpacity, View, ViewPropTypes} from 'react-native';
+import { Image, ImageBackground, Platform, StyleSheet, TouchableOpacity, View, ViewPropTypes, NativeModules } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Video from 'react-native-video'; // eslint-disable-line
 
@@ -181,6 +181,10 @@ export default class VideoPlayer extends Component {
       this.props.onEnd(event);
     }
 
+    if (this.props.dismissFullscreenPlayerOnEnd) {
+      this.player.dismissFullscreenPlayer();
+    }
+
     if (this.props.endWithThumbnail || this.props.endThumbnail) {
       this.setState({ isStarted: false, hasEnded: true });
       this.player.dismissFullscreenPlayer();
@@ -231,7 +235,32 @@ export default class VideoPlayer extends Component {
   }
 
   onToggleFullScreen() {
-    this.player.presentFullscreenPlayer();
+    if(Platform.OS === "android") {
+      var uri = this.props.video.uri;
+      var androidResourceName = this.props.androidResourceName;
+      var position = Math.floor(this.state.duration * this.state.progress);
+      this.showFullscreenAndroid(uri, androidResourceName, position);
+    }
+    else {
+      this.player.presentFullscreenPlayer();
+    }
+  }
+
+  async showFullscreenAndroid(uri, androidResourceName, position) {
+    try {
+      position = await NativeModules.BridgeModule.showFullscreen(uri, androidResourceName, position);
+      // If position is zero, stop.
+      if (position == 0) {
+        this.setState({ isPlaying: false });
+      } else {
+        position = Math.floor(position / 1000);
+        let progress = position / this.state.duration;
+        this.setState({progress,});
+        this.player.seek(position);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   onSeekBarLayout({ nativeEvent }) {
@@ -452,7 +481,7 @@ export default class VideoPlayer extends Component {
             />
           </TouchableOpacity>
         )}
-        {(Platform.OS === 'android' || this.props.disableFullscreen) ? null : (
+        {this.props.disableFullscreen ? null : (
           <TouchableOpacity onPress={this.onToggleFullScreen} style={customStyles.controlButton}>
             <Icon
               style={[styles.extraControl, customStyles.controlIcon]}
