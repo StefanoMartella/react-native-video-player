@@ -56,14 +56,23 @@ public class VideoActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     private void PlayVideo() {
         try {
-//            getWindow().setFormat(PixelFormat.TRANSLUCENT);
             // Set status bar color
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(Color.BLACK);
 
-            mediaController = new MediaController(VideoActivity.this);
-            mediaController.setAnchorView(myVideoView);
+            if (mediaController == null) {
+                mediaController = new MediaController(VideoActivity.this){
+                    @Override
+                    public void show(int timeout) {
+                        super.show(0);
+                    }
+                };;
+                mediaController.setAnchorView(myVideoView);
+                mediaController.setPrevNextListeners(v -> {
+                    mediaController.show();
+                }, v -> finish());
+            }
 
             Uri video = Uri.parse(videoPath);
             myVideoView.setVideoURI(video);
@@ -71,9 +80,6 @@ public class VideoActivity extends AppCompatActivity {
             myVideoView.requestFocus();
             myVideoView.setKeepScreenOn(true);
             myVideoView.seekTo(videoPosition * 1000);
-            mediaController.setPrevNextListeners(v -> {
-                mediaController.show();
-            }, v -> finish());
             myVideoView.setOnPreparedListener(mp -> {
                 progressDialog.dismiss();
                 myVideoView.start();
@@ -88,16 +94,13 @@ public class VideoActivity extends AppCompatActivity {
                     }
                     return true;
                 }
-                return true;
+                return false;
             });
-
-
         } catch (Exception e) {
             progressDialog.dismiss();
             System.out.println("Video Play Error :" + e.toString());
             finishProgress();
         }
-
     }
 
     protected void finishProgress() {
