@@ -580,6 +580,7 @@ export default class VideoPlayer extends Component {
 
 VideoPlayer.propTypes = {
   video: Video.propTypes.source,
+  androidResourceName: PropTypes.string,
   thumbnail: Image.propTypes.source,
   endThumbnail: Image.propTypes.source,
   videoWidth: PropTypes.number,
