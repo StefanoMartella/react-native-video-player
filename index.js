@@ -389,7 +389,11 @@ export default class VideoPlayer extends Component {
         style={[styles.playButton, customStyles.playButton]}
         onPress={this.onStartPress}
       >
-        <Icon style={[styles.playArrow, customStyles.playArrow]} name="play-arrow" size={42} />
+        {this.props.startButtonRenderIcon ? (
+          this.props.startButtonRenderIcon()
+        ) : (
+          <Icon style={[styles.playArrow, customStyles.playArrow]} name="play-arrow" size={42} />
+        )}
       </TouchableOpacity>
     );
   }
@@ -465,29 +469,41 @@ export default class VideoPlayer extends Component {
           onPress={this.onPlayPress}
           style={[customStyles.controlButton, customStyles.playControl]}
         >
-          <Icon
-            style={[styles.playControl, customStyles.controlIcon, customStyles.playIcon]}
-            name={this.state.isPlaying ? 'pause' : 'play-arrow'}
-            size={32}
-          />
+          {this.props.playArrowRenderIcon ? (
+            this.props.playArrowRenderIcon(this.state.isPlaying)
+          ) : (
+            <Icon
+              style={[styles.playControl, customStyles.controlIcon, customStyles.playIcon]}
+              name={this.state.isPlaying ? 'pause' : 'play-arrow'}
+              size={32}
+            />
+          )}
         </TouchableOpacity>
         {this.renderSeekBar()}
         {this.props.muted ? null : (
           <TouchableOpacity onPress={this.onMutePress} style={customStyles.controlButton}>
-            <Icon
-              style={[styles.extraControl, customStyles.controlIcon]}
-              name={this.state.isMuted ? 'volume-off' : 'volume-up'}
-              size={24}
-            />
+            {this.props.volumeRenderIcon ? (
+              this.props.volumeRenderIcon(this.state.isMuted)
+            ) : (
+              <Icon
+                style={[styles.extraControl, customStyles.controlIcon]}
+                name={this.state.isMuted ? 'volume-off' : 'volume-up'}
+                size={24}
+              />
+            )}
           </TouchableOpacity>
         )}
         {this.props.disableFullscreen ? null : (
           <TouchableOpacity onPress={this.onToggleFullScreen} style={customStyles.controlButton}>
-            <Icon
-              style={[styles.extraControl, customStyles.controlIcon]}
-              name="fullscreen"
-              size={32}
-            />
+            {this.props.fullscreenRenderIcon ? (
+              this.props.fullscreenRenderIcon()
+            ) : (
+              <Icon
+                style={[styles.extraControl, customStyles.controlIcon]}
+                name="fullscreen"
+                size={32}
+              />
+            )}
           </TouchableOpacity>
         )}
       </View>
@@ -581,6 +597,10 @@ export default class VideoPlayer extends Component {
 VideoPlayer.propTypes = {
   video: Video.propTypes.source,
   androidResourceName: PropTypes.string,
+  startButtonRenderIcon: PropTypes.func,
+  playArrowRenderIcon: PropTypes.func,
+  volumeRenderRenderIcon: PropTypes.func,
+  fullscreenRenderIcon: PropTypes.func,
   thumbnail: Image.propTypes.source,
   endThumbnail: Image.propTypes.source,
   videoWidth: PropTypes.number,
